@@ -1,0 +1,1740 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Smart Waste Management',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Inter', // Assuming Inter font is available or default
+      ),
+      home: const AuthScreen(),
+    );
+  }
+}
+
+// Utility function for a simple delay
+Future<void> delay(int ms) {
+  return Future.delayed(Duration(milliseconds: ms));
+}
+
+// --- Auth Screen Component ---
+class AuthScreen extends StatefulWidget {
+  const AuthScreen({super.key});
+
+  @override
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String? _error;
+  bool _isLoading = false;
+
+  void _handleLogin(String role) async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    // Simulate API call
+    await delay(500);
+
+    if (_emailController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) {
+          switch (role) {
+            case 'generator':
+              return const WasteGeneratorDashboard();
+            case 'collector':
+              return const WasteCollectorDashboard();
+            case 'reuser':
+              return const WasteReuserDashboard();
+            default:
+              return const AuthScreen(); // Should not happen
+          }
+        }),
+      );
+    } else {
+      setState(() {
+        _error = 'Please enter email and password.';
+      });
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFDCFCE7),
+              Color(0xFFBFDBFE)
+            ], // from-green-100 to-blue-200
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0)),
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Welcome to Smart Waste',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937), // gray-800
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Please log in to continue.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF4B5563), // gray-600
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        hintText: 'Email',
+                        prefixIcon: const Icon(Icons.email_outlined,
+                            color: Color(0xFF9CA3AF)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: const BorderSide(
+                              color: Color(0xFFD1D5DB)), // gray-300
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF22C55E), width: 2), // green-500
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline,
+                            color: Color(0xFF9CA3AF)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: const BorderSide(
+                              color: Color(0xFFD1D5DB)), // gray-300
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF22C55E), width: 2), // green-500
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 16),
+                      ),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            _isLoading ? null : () => _handleLogin('generator'),
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white)))
+                            : const Icon(Icons.person),
+                        label: Text(_isLoading
+                            ? 'Logging in...'
+                            : 'Log in as Waste Generator'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF22C55E), // green-600
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          textStyle: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                          elevation: 3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            _isLoading ? null : () => _handleLogin('collector'),
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white)))
+                            : const Icon(Icons.local_shipping),
+                        label: Text(_isLoading
+                            ? 'Logging in...'
+                            : 'Log in as Waste Collector'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6), // blue-600
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          textStyle: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                          elevation: 3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            _isLoading ? null : () => _handleLogin('reuser'),
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white)))
+                            : const Icon(Icons.recycling),
+                        label: Text(_isLoading
+                            ? 'Logging in...'
+                            : 'Log in as Waste Reuser'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(0xFF9333EA), // purple-600
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          textStyle: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                          elevation: 3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Waste Generator Dashboard Component ---
+class WasteGeneratorDashboard extends StatefulWidget {
+  const WasteGeneratorDashboard({super.key});
+
+  @override
+  State<WasteGeneratorDashboard> createState() =>
+      _WasteGeneratorDashboardState();
+}
+
+class _WasteGeneratorDashboardState extends State<WasteGeneratorDashboard> {
+  String _binStatus =
+      'empty'; // 'empty', 'full', 'pickup_requested', 'collected'
+  List<Map<String, String>> _pickupHistory = [
+    {
+      'id': '1',
+      'date': '2024-07-25',
+      'status': 'Collected',
+      'type': 'Mixed Waste'
+    },
+    {
+      'id': '2',
+      'date': '2024-07-18',
+      'status': 'Collected',
+      'type': 'Recyclables'
+    },
+  ];
+  List<String> _notifications = [
+    'Your pickup request for Mixed Waste has been confirmed for 2024-08-01.',
+    'Collector John is 15 mins away for your pickup!',
+  ];
+
+  void _handleMarkFull() async {
+    setState(() {
+      _binStatus = 'full';
+    });
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, size: 64, color: Colors.green[500]),
+              const SizedBox(height: 16),
+              const Text(
+                'Bin Marked as Full!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Requesting pickup...',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    await delay(1500); // Simulate processing
+    if (!mounted) return;
+    Navigator.of(context).pop(); // Dismiss the dialog
+
+    setState(() {
+      _binStatus = 'pickup_requested';
+      _notifications.insert(
+          0, 'Pickup requested for your bin. ETA will be provided soon.');
+    });
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'empty':
+        return Colors.grey[500]!;
+      case 'full':
+        return Colors.red[500]!;
+      case 'pickup_requested':
+        return Colors.yellow[700]!;
+      case 'collected':
+        return Colors.green[500]!;
+      default:
+        return Colors.grey[500]!;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'empty':
+        return Icons.delete_outline;
+      case 'full':
+        return Icons.delete;
+      case 'pickup_requested':
+        return Icons.local_shipping;
+      case 'collected':
+        return Icons.check_circle;
+      default:
+        return Icons.delete_outline;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Waste Generator Dashboard'),
+        backgroundColor: const Color(0xFF22C55E), // green-600
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AuthScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF0FDF4),
+              Color(0xFFDBEAFE)
+            ], // from-green-50 to-blue-100
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Bin Status Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Current Bin Status',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)), // gray-700
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(_getStatusIcon(_binStatus),
+                                  size: 32, color: _getStatusColor(_binStatus)),
+                              const SizedBox(width: 12),
+                              Text(
+                                _binStatus.replaceAll('_', ' ').toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: _getStatusColor(_binStatus),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      if (_binStatus == 'empty')
+                        ElevatedButton.icon(
+                          onPressed: _handleMarkFull,
+                          icon: const Icon(Icons.delete),
+                          label: const Text('Mark Bin as Full'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[500],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle:
+                                const TextStyle(fontWeight: FontWeight.w600),
+                            elevation: 3,
+                          ),
+                        )
+                      else if (_binStatus == 'full')
+                        ElevatedButton.icon(
+                          onPressed: null,
+                          icon: Icon(Icons.delete, color: Colors.red[300]),
+                          label: Text('Bin is Full',
+                              style: TextStyle(color: Colors.red[300])),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[200],
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle:
+                                const TextStyle(fontWeight: FontWeight.w600),
+                            elevation: 0,
+                          ),
+                        )
+                      else if (_binStatus == 'pickup_requested')
+                        ElevatedButton.icon(
+                          onPressed: null,
+                          icon: Icon(Icons.local_shipping,
+                              color: Colors.yellow[700]),
+                          label: Text('Pickup Requested',
+                              style: TextStyle(color: Colors.yellow[700])),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.yellow[100],
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle:
+                                const TextStyle(fontWeight: FontWeight.w600),
+                            elevation: 0,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Notification Center
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.notifications,
+                              size: 24, color: Color(0xFF374151)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Notification Center',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_notifications.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _notifications.map((notification) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  notification,
+                                  style: TextStyle(
+                                      color: Colors.blue[800], fontSize: 13),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        )
+                      else
+                        const Text(
+                          'No new notifications.',
+                          style:
+                              TextStyle(color: Color(0xFF6B7280)), // gray-500
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Pickup History
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.history,
+                              size: 24, color: Color(0xFF374151)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Past Pickups',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_pickupHistory.isNotEmpty)
+                        SizedBox(
+                          width: double.infinity,
+                          child: DataTable(
+                            columnSpacing: 16,
+                            dataRowHeight: 50,
+                            headingRowColor: MaterialStateColor.resolveWith(
+                                (states) => Colors.grey[100]!),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[200]!),
+                            ),
+                            columns: const [
+                              DataColumn(
+                                  label: Text('Date',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Type',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Status',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                            ],
+                            rows: _pickupHistory.map((pickup) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(pickup['date']!)),
+                                  DataCell(Text(pickup['type']!)),
+                                  DataCell(
+                                    Chip(
+                                      label: Text(pickup['status']!),
+                                      backgroundColor:
+                                          pickup['status'] == 'Collected'
+                                              ? Colors.green[100]
+                                              : Colors.grey[100],
+                                      labelStyle: TextStyle(
+                                        color: pickup['status'] == 'Collected'
+                                            ? Colors.green[800]
+                                            : Colors.grey[800],
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        )
+                      else
+                        const Text(
+                          'No past pickups recorded.',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Waste Collector Dashboard Component ---
+class WasteCollectorDashboard extends StatefulWidget {
+  const WasteCollectorDashboard({super.key});
+
+  @override
+  State<WasteCollectorDashboard> createState() =>
+      _WasteCollectorDashboardState();
+}
+
+class _WasteCollectorDashboardState extends State<WasteCollectorDashboard> {
+  List<Map<String, String>> _pickupTasks = [
+    {
+      'id': '1',
+      'location': '123 Main St, City',
+      'type': 'Mixed Waste',
+      'priority': 'High',
+      'status': 'Pending'
+    },
+    {
+      'id': '2',
+      'location': '456 Oak Ave, Town',
+      'type': 'Recyclables',
+      'priority': 'Medium',
+      'status': 'Pending'
+    },
+    {
+      'id': '3',
+      'location': '789 Pine Ln, Village',
+      'type': 'Organic Waste',
+      'priority': 'Low',
+      'status': 'Pending'
+    },
+  ];
+  List<Map<String, String>> _collectionHistory = [
+    {
+      'id': '101',
+      'date': '2024-07-29',
+      'location': '101 Elm St',
+      'type': 'Mixed Waste',
+      'status': 'Completed'
+    },
+  ];
+  List<Map<String, String>> _chatHistory = [];
+  final TextEditingController _chatMessageController = TextEditingController();
+
+  void _handleMarkCollected(String id) {
+    setState(() {
+      final taskIndex = _pickupTasks.indexWhere((task) => task['id'] == id);
+      if (taskIndex != -1) {
+        final collectedTask = {
+          ..._pickupTasks[taskIndex],
+          'status': 'Collected'
+        };
+        _pickupTasks[taskIndex] = collectedTask;
+        _collectionHistory.insert(0, {
+          ...collectedTask,
+          'date': DateTime.now().toIso8601String().substring(0, 10),
+          'status': 'Completed'
+        });
+      }
+    });
+  }
+
+  void _handleSendMessage() {
+    if (_chatMessageController.text.trim().isNotEmpty) {
+      setState(() {
+        _chatHistory.add({
+          'sender': 'You',
+          'message': _chatMessageController.text.trim(),
+          'time': TimeOfDay.now().format(context),
+        });
+        _chatMessageController.clear();
+      });
+      // Simulate AI response or other user response
+      Future.delayed(const Duration(seconds: 1), () {
+        if (!mounted) return;
+        setState(() {
+          _chatHistory.add({
+            'sender': 'Reuser',
+            'message': 'Thanks for the update!',
+            'time': TimeOfDay.now().format(context),
+          });
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _chatMessageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Waste Collector Dashboard'),
+        backgroundColor: const Color(0xFF3B82F6), // blue-600
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AuthScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFEFF6FF),
+              Color(0xFFEDE9FE)
+            ], // from-blue-50 to-purple-100
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Pending Pickup Tasks
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.location_on,
+                              size: 24, color: Color(0xFF374151)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Pending Pickup Tasks',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_pickupTasks
+                          .where((task) => task['status'] == 'Pending')
+                          .isNotEmpty)
+                        Column(
+                          children: _pickupTasks
+                              .where((task) => task['status'] == 'Pending')
+                              .map((task) {
+                            Color priorityColor;
+                            switch (task['priority']) {
+                              case 'High':
+                                priorityColor = Colors.red[500]!;
+                                break;
+                              case 'Medium':
+                                priorityColor = Colors.yellow[700]!;
+                                break;
+                              case 'Low':
+                                priorityColor = Colors.green[600]!;
+                                break;
+                              default:
+                                priorityColor = Colors.grey[500]!;
+                            }
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[200]!),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          task['location']!,
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF1F2937)),
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: () =>
+                                            _handleMarkCollected(task['id']!),
+                                        icon: const Icon(Icons.check_circle,
+                                            size: 18),
+                                        label: const Text('Mark as Collected'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green[500],
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                          textStyle: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text('Type: ${task['type']!}',
+                                      style: const TextStyle(
+                                          color: Color(0xFF4B5563))),
+                                  Text('Priority: ${task['priority']!}',
+                                      style: TextStyle(color: priorityColor)),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        )
+                      else
+                        const Text(
+                          'No pending pickup tasks.',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Chat with Reusers Button
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Communicate with Reusers',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151)),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20)),
+                              ),
+                              builder: (context) => _buildChatModal(context),
+                            );
+                          },
+                          icon: const Icon(Icons.message),
+                          label: const Text('Chat with Reusers'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color(0xFF9333EA), // purple-600
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                            elevation: 3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Collection History
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.history,
+                              size: 24, color: Color(0xFF374151)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Collection History',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_collectionHistory.isNotEmpty)
+                        SizedBox(
+                          width: double.infinity,
+                          child: DataTable(
+                            columnSpacing: 16,
+                            dataRowHeight: 50,
+                            headingRowColor: MaterialStateColor.resolveWith(
+                                (states) => Colors.grey[100]!),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[200]!),
+                            ),
+                            columns: const [
+                              DataColumn(
+                                  label: Text('Date',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Location',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Type',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Status',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                            ],
+                            rows: _collectionHistory.map((collection) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(collection['date']!)),
+                                  DataCell(Text(collection['location']!)),
+                                  DataCell(Text(collection['type']!)),
+                                  DataCell(
+                                    Chip(
+                                      label: Text(collection['status']!),
+                                      backgroundColor:
+                                          collection['status'] == 'Completed'
+                                              ? Colors.green[100]
+                                              : Colors.grey[100],
+                                      labelStyle: TextStyle(
+                                        color:
+                                            collection['status'] == 'Completed'
+                                                ? Colors.green[800]
+                                                : Colors.grey[800],
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        )
+                      else
+                        const Text(
+                          'No collection history.',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatModal(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Chat with Reusers',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F2937)),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  color: Colors.grey[700],
+                ),
+              ],
+            ),
+            const Divider(height: 20, thickness: 1),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _chatHistory.length,
+                itemBuilder: (context, index) {
+                  final msg = _chatHistory[index];
+                  final isMe = msg['sender'] == 'You';
+                  return Align(
+                    alignment:
+                        isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isMe ? Colors.blue[500] : Colors.grey[200],
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(isMe ? 16 : 0),
+                          topRight: Radius.circular(isMe ? 0 : 16),
+                          bottomLeft: const Radius.circular(16),
+                          bottomRight: const Radius.circular(16),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            msg['message']!,
+                            style: TextStyle(
+                                color: isMe ? Colors.white : Colors.black87),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${msg['sender']} at ${msg['time']!}',
+                            style: TextStyle(
+                                fontSize: 10,
+                                color:
+                                    isMe ? Colors.blue[100] : Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _chatMessageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type your message...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF3B82F6), width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 16),
+                    ),
+                    onSubmitted: (_) => _handleSendMessage(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _handleSendMessage,
+                  color: const Color(0xFF3B82F6),
+                  iconSize: 30,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- Waste Reuser Dashboard Component ---
+class WasteReuserDashboard extends StatefulWidget {
+  const WasteReuserDashboard({super.key});
+
+  @override
+  State<WasteReuserDashboard> createState() => _WasteReuserDashboardState();
+}
+
+class _WasteReuserDashboardState extends State<WasteReuserDashboard> {
+  List<Map<String, String>> _availableWaste = [
+    {
+      'id': '1',
+      'type': 'PET Plastics',
+      'quantity': '500 kg',
+      'location': 'Warehouse A, City',
+      'collector': 'John Doe'
+    },
+    {
+      'id': '2',
+      'type': 'Cardboard',
+      'quantity': '1.2 tons',
+      'location': 'Depot B, Town',
+      'collector': 'Jane Smith'
+    },
+    {
+      'id': '3',
+      'type': 'Glass Bottles',
+      'quantity': '300 kg',
+      'location': 'Collection Point C, Village',
+      'collector': 'Mike Johnson'
+    },
+  ];
+  List<Map<String, String>> _transactionHistory = [
+    {
+      'id': '201',
+      'date': '2024-07-20',
+      'type': 'PET Plastics',
+      'quantity': '400 kg',
+      'status': 'Acquired'
+    },
+  ];
+  String _filterType = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    List<Map<String, String>> filteredWaste = _availableWaste.where((waste) {
+      return _filterType == 'All' || waste['type']!.contains(_filterType);
+    }).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Waste Reuser Dashboard'),
+        backgroundColor: const Color(0xFF9333EA), // purple-600
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AuthScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF5F3FF),
+              Color(0xFFEEF2FF)
+            ], // from-purple-50 to-indigo-100
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Browse Available Waste
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.recycling,
+                              size: 24, color: Color(0xFF374151)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Available Collected Waste',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.filter_list,
+                              size: 20, color: Color(0xFF4B5563)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _filterType,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFFD1D5DB)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF9333EA), width: 2),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                    value: 'All', child: Text('All Types')),
+                                DropdownMenuItem(
+                                    value: 'PET Plastics',
+                                    child: Text('PET Plastics')),
+                                DropdownMenuItem(
+                                    value: 'Cardboard',
+                                    child: Text('Cardboard')),
+                                DropdownMenuItem(
+                                    value: 'Glass Bottles',
+                                    child: Text('Glass Bottles')),
+                                DropdownMenuItem(
+                                    value: 'Organic Waste',
+                                    child: Text('Organic Waste')),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _filterType = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (filteredWaste.isNotEmpty)
+                        Column(
+                          children: filteredWaste.map((waste) {
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey[200]!),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          waste['type']!,
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF1F2937)),
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          _showContactCollectorModal(
+                                              context, waste['collector']!);
+                                        },
+                                        icon: const Icon(Icons.phone, size: 18),
+                                        label: const Text('Contact Collector'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                              0xFF9333EA), // purple-600
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                          textStyle: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text('Quantity: ${waste['quantity']!}',
+                                      style: const TextStyle(
+                                          color: Color(0xFF4B5563))),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.location_on,
+                                          size: 16, color: Colors.grey[600]),
+                                      const SizedBox(width: 4),
+                                      Text(waste['location']!,
+                                          style: const TextStyle(
+                                              color: Color(0xFF4B5563))),
+                                    ],
+                                  ),
+                                  Text('Collector: ${waste['collector']!}',
+                                      style: const TextStyle(
+                                          color: Color(0xFF4B5563))),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        )
+                      else
+                        const Text(
+                          'No waste available matching your filter.',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Request Pickup/Transfer Button
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Request Waste Pickup or Transfer',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151)),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _showRequestPickupModal(context);
+                          },
+                          icon: const Icon(Icons.local_shipping),
+                          label: const Text('Request Pickup/Transfer'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color(0xFF4F46E5), // indigo-600
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                            elevation: 3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Transaction History
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.history,
+                              size: 24, color: Color(0xFF374151)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Transaction History',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_transactionHistory.isNotEmpty)
+                        SizedBox(
+                          width: double.infinity,
+                          child: DataTable(
+                            columnSpacing: 16,
+                            dataRowHeight: 50,
+                            headingRowColor: MaterialStateColor.resolveWith(
+                                (states) => Colors.grey[100]!),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[200]!),
+                            ),
+                            columns: const [
+                              DataColumn(
+                                  label: Text('Date',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Type',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Quantity',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                              DataColumn(
+                                  label: Text('Status',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4B5563)))),
+                            ],
+                            rows: _transactionHistory.map((transaction) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(transaction['date']!)),
+                                  DataCell(Text(transaction['type']!)),
+                                  DataCell(Text(transaction['quantity']!)),
+                                  DataCell(
+                                    Chip(
+                                      label: Text(transaction['status']!),
+                                      backgroundColor:
+                                          transaction['status'] == 'Acquired'
+                                              ? Colors.green[100]
+                                              : Colors.blue[100],
+                                      labelStyle: TextStyle(
+                                        color:
+                                            transaction['status'] == 'Acquired'
+                                                ? Colors.green[800]
+                                                : Colors.blue[800],
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        )
+                      else
+                        const Text(
+                          'No transaction history.',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showContactCollectorModal(BuildContext context, String collectorName) {
+    final TextEditingController messageController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Contact $collectorName',
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: messageController,
+            maxLines: 5,
+            decoration: InputDecoration(
+              hintText: 'Type your message to $collectorName...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide:
+                    const BorderSide(color: Color(0xFF9333EA), width: 2),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (messageController.text.trim().isNotEmpty) {
+                  // In a real app, send message to backend
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Message sent to $collectorName: "${messageController.text.trim()}"')),
+                  );
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Message cannot be empty.')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF9333EA),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Send Message'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRequestPickupModal(BuildContext context) {
+    final TextEditingController typeController = TextEditingController();
+    final TextEditingController quantityController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Request Waste',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: typeController,
+                decoration: InputDecoration(
+                  labelText: 'Waste Type',
+                  hintText: 'e.g., PET Plastics, Cardboard',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF4F46E5), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: quantityController,
+                decoration: InputDecoration(
+                  labelText: 'Quantity',
+                  hintText: 'e.g., 1 ton, 500 kg',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF4F46E5), width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (typeController.text.trim().isNotEmpty &&
+                    quantityController.text.trim().isNotEmpty) {
+                  setState(() {
+                    _transactionHistory.insert(0, {
+                      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                      'date': DateTime.now().toIso8601String().substring(0, 10),
+                      'type': typeController.text.trim(),
+                      'quantity': quantityController.text.trim(),
+                      'status': 'Requested',
+                    });
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Request sent for ${quantityController.text.trim()} of ${typeController.text.trim()}.')),
+                  );
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Please fill in all request details.')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F46E5),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('Submit Request'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
