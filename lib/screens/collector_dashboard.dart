@@ -8,6 +8,7 @@ import '../utils/colors.dart';
 import '../services/location_service.dart';
 import '../services/geocoding_service.dart';
 import 'auth_service.dart';
+import 'package:flutter/services.dart';
 
 class CollectorDashboard extends StatefulWidget {
   const CollectorDashboard({super.key});
@@ -181,7 +182,8 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          //urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.ecotrack',
         ),
         MarkerLayer(
@@ -269,15 +271,110 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
     final latitude = location.latitude;
     final longitude = location.longitude;
 
-    final googleMapsUrl = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving',
-    );
+    print('Attempting navigation to: $latitude, $longitude');
 
-    if (await canLaunchUrl(googleMapsUrl)) {
-      await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+    // List of URLs to try in order of preference
+    final urlsToTry = [
+      // Google Maps app (most common on Android)
+      Uri.parse('google.navigation:q=$latitude,$longitude&mode=d'),
+
+      // Google Maps web version
+      Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving'),
+
+      // Apple Maps (for iOS or some Android devices)
+      Uri.parse('https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=d'),
+
+      // Generic geo URI (works with many map apps)
+      Uri.parse('geo:$latitude,$longitude?q=$latitude,$longitude(Waste+Collection+Point)'),
+
+      // Waze (if installed)
+      Uri.parse('waze://?ll=$latitude,$longitude&navigate=yes'),
+
+      // Here WeGo maps
+      Uri.parse('here-route://$latitude,$longitude'),
+    ];
+
+    bool launched = false;
+
+    for (final url in urlsToTry) {
+      try {
+        print('Trying URL: ${url.toString()}');
+        if (await canLaunchUrl(url)) {
+          print('Success - can launch this URL');
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+          launched = true;
+          break;
+        } else {
+          print('Cannot launch this URL');
+        }
+      } catch (e) {
+        print('Error launching URL: $e');
+      }
+    }
+
+    if (!launched) {
+      _showNavigationFallbackDialog(latitude, longitude);
+    }
+  }
+
+  void _showNavigationFallbackDialog(double latitude, double longitude) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Navigation Options'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('No navigation app found. Choose an option:'),
+            const SizedBox(height: 16),
+            Text(
+              'Coordinates:\nLatitude: ${latitude.toStringAsFixed(6)}\nLongitude: ${longitude.toStringAsFixed(6)}',
+              style: const TextStyle(fontFamily: 'monospace'),
+            ),
+          ],
+        ),
+        actions: [
+          // Copy coordinates option
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _copyCoordinatesToClipboard(latitude, longitude);
+            },
+            child: const Text('Copy Coordinates'),
+          ),
+          // Open in browser option
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _openInWebBrowser(latitude, longitude);
+            },
+            child: const Text('Open in Browser'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _copyCoordinatesToClipboard(double lat, double lng) async {
+    final coordinates = '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+    await Clipboard.setData(ClipboardData(text: coordinates));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Coordinates copied: $coordinates')),
+    );
+  }
+
+  Future<void> _openInWebBrowser(double lat, double lng) async {
+    final url = Uri.parse('https://www.openstreetmap.org/?mlat=$lat&mlon=$lng#map=16/$lat/$lng');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch Maps')),
+        const SnackBar(content: Text('Could not open browser')),
       );
     }
   }

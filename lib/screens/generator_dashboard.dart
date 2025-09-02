@@ -17,11 +17,34 @@ class _GeneratorDashboardState extends State<GeneratorDashboard> {
 
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoading = true);
-    final position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentLocation = latlong2.LatLng(position.latitude, position.longitude);
-      _isLoading = false;
-    });
+
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permission is required.')),
+        );
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _currentLocation =
+            latlong2.LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to get location: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _confirmLocation() {
@@ -132,16 +155,13 @@ class _GeneratorDashboardState extends State<GeneratorDashboard> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white)
-                                : const Text(
-                                    'Use This Location for Collection',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                            child: const Text(
+                              'Use This Location for Collection',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -159,14 +179,14 @@ class _GeneratorDashboardState extends State<GeneratorDashboard> {
                         ),
                         child: _isLoading
                             ? const CircularProgressIndicator(
-                                color: Colors.white)
+                            color: Colors.white)
                             : const Text(
-                                'Mark Bin as Full',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
+                          'Mark Bin as Full',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 15),
