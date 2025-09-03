@@ -1,0 +1,1 @@
+io.objectbox.objectbox_flutter_libs
