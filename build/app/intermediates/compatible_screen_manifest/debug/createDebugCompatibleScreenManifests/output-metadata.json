@@ -4,7 +4,7 @@
     "type": "COMPATIBLE_SCREEN_MANIFEST",
     "kind": "Directory"
   },
-  "applicationId": "com.example.ecotrack",
+  "applicationId": "com.example.smart_waste_management",
   "variantName": "debug",
   "elements": []
 }

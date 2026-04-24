@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.ecotrack.app-mergeDebugResources-43:/values-sw360dp-v13/values-sw360dp-v13.xml",
+            "outputFile": "com.example.smart_waste_management.app-mergeDebugResources-46:/values-sw360dp-v13/values-sw360dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\8.10.2\\transforms\\c14388687b39ff2084d6d7c44c397a9c\\transformed\\preference-1.2.1\\res\\values-sw360dp-v13\\values-sw360dp-v13.xml",
+                    "source": "C:\\Users\\Belair\\.gradle\\caches\\8.11.1\\transforms\\033e3640bfab1dafab69b997b2d507b5\\transformed\\preference-1.2.1\\res\\values-sw360dp-v13\\values-sw360dp-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

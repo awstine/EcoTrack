@@ -4,7 +4,7 @@
     "type": "MERGED_MANIFESTS",
     "kind": "Directory"
   },
-  "applicationId": "com.example.ecotrack",
+  "applicationId": "com.example.smart_waste_management",
   "variantName": "debug",
   "elements": [
     {

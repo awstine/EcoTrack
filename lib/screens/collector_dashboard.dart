@@ -7,8 +7,10 @@ import '../widgets/task_card.dart';
 import '../utils/colors.dart';
 import '../services/location_service.dart';
 import '../services/geocoding_service.dart';
+import '../services/waste_item_service.dart';
 import 'auth_service.dart';
 import 'package:flutter/services.dart';
+import 'dart:math';
 
 class CollectorDashboard extends StatefulWidget {
   const CollectorDashboard({super.key});
@@ -83,6 +85,152 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
 
   String _getDisplayName(latlong2.LatLng location) {
     return _locationNames[location] ?? 'Loading location...';
+  }
+
+  void _showAddWasteItemDialog() {
+    final _nameController = TextEditingController();
+    final _locationController = TextEditingController();
+    final _distanceController = TextEditingController();
+    final _quantityController = TextEditingController();
+    final _phoneController = TextEditingController();
+    String _selectedType = 'plastic';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.add_circle, color: AppColors.primary),
+            SizedBox(width: 10),
+            Text('Add Waste Material'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Material Name',
+                  hintText: 'e.g., Clean PET Plastic',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                items: const [
+                  DropdownMenuItem(value: 'plastic', child: Text('Plastic')),
+                  DropdownMenuItem(value: 'paper', child: Text('Paper')),
+                  DropdownMenuItem(value: 'metal', child: Text('Metal')),
+                  DropdownMenuItem(value: 'glass', child: Text('Glass')),
+                  DropdownMenuItem(value: 'organic', child: Text('Organic')),
+                ],
+                onChanged: (value) {
+                  _selectedType = value!;
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Material Type',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _locationController,
+                decoration: const InputDecoration(
+                  labelText: 'Location',
+                  hintText: 'e.g., Central Collection Facility',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _distanceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Distance (km)',
+                  hintText: 'e.g., 3.2',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Quantity (kg)',
+                  hintText: 'e.g., 420',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  hintText: 'e.g., +254712345678',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_nameController.text.isEmpty ||
+                  _locationController.text.isEmpty ||
+                  _distanceController.text.isEmpty ||
+                  _quantityController.text.isEmpty ||
+                  _phoneController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please fill all fields')),
+                );
+                return;
+              }
+
+              final distance = double.tryParse(_distanceController.text);
+              final quantity = int.tryParse(_quantityController.text);
+
+              if (distance == null || quantity == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter valid numbers for distance and quantity')),
+                );
+                return;
+              }
+
+              final wasteItem = WasteItem(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                name: _nameController.text.trim(),
+                type: _selectedType,
+                location: _locationController.text.trim(),
+                distance: distance,
+                quantity: quantity,
+                phone: _phoneController.text.trim(),
+              );
+
+              await WasteItemService.addWasteItem(wasteItem);
+
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Waste material added successfully!')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Add Material'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -166,9 +314,9 @@ class _CollectorDashboardState extends State<CollectorDashboard> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _centerMapOnBins,
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.my_location, color: Colors.white),
+        onPressed: _showAddWasteItemDialog,
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
